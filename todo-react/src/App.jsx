@@ -87,7 +87,7 @@ class App extends Component {
             fontWeight: "bolder",
           }}
         >
-          TODO LIST Nitika
+          TODO LIST updated by the project sub branch
         </Row>
 
         <hr />
