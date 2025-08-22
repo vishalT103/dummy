@@ -1,158 +1,299 @@
-// App.js File
-import React, { Component } from "react";
-import "bootstrap/dist/css/bootstrap.css";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Button from "react-bootstrap/Button";
-import InputGroup from "react-bootstrap/InputGroup";
-import FormControl from "react-bootstrap/FormControl";
-import ListGroup from "react-bootstrap/ListGroup";
+// App.js
+import React, { useState, useEffect } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import {
+  Container,
+  Row,
+  Col,
+  Button,
+  InputGroup,
+  FormControl,
+  ListGroup,
+  Card,
+  Nav,
+} from "react-bootstrap";
+import {
+  SunFill,
+  MoonFill,
+  CheckCircleFill,
+  Pencil,
+  Trash,
+} from "react-bootstrap-icons";
 
-class App extends Component {
-  constructor(props) {
-    super(props);
+function App() {
+  const [userInput, setUserInput] = useState("");
+  const [list, setList] = useState([]);
+  const [darkMode, setDarkMode] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const [filter, setFilter] = useState("all"); // all, completed, pending
 
-    // Setting up state
-    this.state = {
-      userInput: "",
-      list: [],
-    };
-  }
+  // Load from localStorage
+  useEffect(() => {
+    const storedList = JSON.parse(localStorage.getItem("todos"));
+    const storedTheme = JSON.parse(localStorage.getItem("darkMode"));
+    if (storedList) setList(storedList);
+    if (storedTheme) setDarkMode(storedTheme);
+  }, []);
 
-  // Set a user input value
-  updateInput(value) {
-    this.setState({
-      userInput: value,
-    });
-  }
+  // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(list));
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  }, [list, darkMode]);
 
-  // Add item if user input in not empty
-  addItem() {
-    if (this.state.userInput !== "") {
-      const userInput = {
-        // Add a random id which is used to delete
-        id: Math.random(),
-
-        // Add a user value to list
-        value: this.state.userInput,
+  // Add todo
+  const addItem = () => {
+    if (userInput.trim() !== "") {
+      const newItem = {
+        id: Date.now(),
+        value: userInput,
+        completed: false,
       };
-
-      // Update list
-      const list = [...this.state.list];
-      list.push(userInput);
-
-      // reset state
-      this.setState({
-        list,
-        userInput: "",
-      });
+      setList([...list, newItem]);
+      setUserInput("");
     }
-  }
+  };
 
-  // Function to delete item from list use id to delete
-  deleteItem(key) {
-    const list = [...this.state.list];
+  // Delete todo
+  const deleteItem = (id) => {
+    setList(list.filter((item) => item.id !== id));
+  };
 
-    // Filter values and leave value which we need to delete
-    const updateList = list.filter((item) => item.id !== key);
+  // Toggle completion
+  const toggleComplete = (id) => {
+    setList(
+      list.map((item) =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      )
+    );
+  };
 
-    // Update list in state
-    this.setState({
-      list: updateList,
-    });
-  }
+  // Start editing
+  const startEditing = (index, value) => {
+    setEditingIndex(index);
+    setEditValue(value);
+  };
 
-  editItem = (index) => {
-    const todos = [...this.state.list];
-    const editedTodo = prompt('Edit the todo:');
-    if (editedTodo !== null && editedTodo.trim() !== '') {
-      let updatedTodos = [...todos]
-      updatedTodos[index].value = editedTodo
-      this.setState({
-        list: updatedTodos,
-      });
+  // Save edit
+  const saveEdit = (index) => {
+    if (editValue.trim() !== "") {
+      const updated = [...list];
+      updated[index].value = editValue;
+      setList(updated);
+      setEditingIndex(null);
+      setEditValue("");
     }
-  }
+  };
 
-  render() {
-    return (
-      <Container>
-        <Row
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            fontSize: "3rem",
-            fontWeight: "bolder",
-          }}
-        >
-          TODO LIST error fixed by the project sub branchdfsdf
+  // Cancel edit
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setEditValue("");
+  };
+
+  // Clear completed
+  const clearCompleted = () => {
+    setList(list.filter((item) => !item.completed));
+  };
+
+  // Clear all
+  const clearAll = () => {
+    setList([]);
+  };
+
+  // Filtered todos
+  const filteredList =
+    filter === "all"
+      ? list
+      : filter === "completed"
+        ? list.filter((i) => i.completed)
+        : list.filter((i) => !i.completed);
+
+  // Stats
+  const total = list.length;
+  const completed = list.filter((i) => i.completed).length;
+  const pending = total - completed;
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: darkMode
+          ? "linear-gradient(to right, #141e30, #243b55)"
+          : "linear-gradient(to right, #f8f9fa, #e9ecef)",
+        color: darkMode ? "#fff" : "#000",
+        transition: "0.3s",
+      }}
+    >
+      <Container fluid className="py-4 d-flex flex-column h-100">
+        {/* Header */}
+        <Row>
+          <Col className="d-flex justify-content-between align-items-center">
+            <h2 className="fw-bold">🚀 Advanced Todo Dashboard</h2>
+            <Button
+              variant={darkMode ? "light" : "dark"}
+              onClick={() => setDarkMode(!darkMode)}
+              className="rounded-circle"
+              style={{ width: "50px", height: "50px" }}
+            >
+              {darkMode ? <SunFill /> : <MoonFill />}
+            </Button>
+          </Col>
         </Row>
 
-        <hr />
-        <Row>
-          <Col md={{ span: 5, offset: 4 }}>
-            <InputGroup className="mb-3">
+        {/* Stats */}
+        <Row className="my-3">
+          <Col md={4}>
+            <Card className="shadow-sm text-center">
+              <Card.Body>
+                <h5>Total</h5>
+                <h3>{total}</h3>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={4}>
+            <Card className="shadow-sm text-center">
+              <Card.Body>
+                <h5>Completed</h5>
+                <h3 className="text-success">{completed}</h3>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={4}>
+            <Card className="shadow-sm text-center">
+              <Card.Body>
+                <h5>Pending</h5>
+                <h3 className="text-danger">{pending}</h3>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Input */}
+        <Row className="mb-3">
+          <Col md={{ span: 8, offset: 2 }}>
+            <InputGroup>
               <FormControl
-                placeholder="add item . . . "
+                placeholder="Add a new todo..."
                 size="lg"
-                value={this.state.userInput}
-                onChange={(item) =>
-                  this.updateInput(item.target.value)
-                }
-                aria-label="add something"
-                aria-describedby="basic-addon2"
+                value={userInput}
+                onChange={(e) => setUserInput(e.target.value)}
               />
-              <InputGroup>
-                <Button
-                  variant="dark"
-                  className="mt-2"
-                  onClick={() => this.addItem()}
-                >
-                  ADD
-                </Button>
-              </InputGroup>
+              <Button variant="primary" onClick={addItem}>
+                Add
+              </Button>
             </InputGroup>
           </Col>
         </Row>
+
+        {/* Filters */}
         <Row>
-          <Col md={{ span: 5, offset: 4 }}>
-            <ListGroup>
-              {/* map over and print items */}
-              {this.state.list.map((item, index) => {
-                return (
-                  <div key={index} >
-                    <ListGroup.Item
-                      variant="dark"
-                      action
-                      style={{
-                        display: "flex",
-                        justifyContent: 'space-between'
-                      }}
-                    >
-                      {item.value}
-                      <span>
-                        <Button style={{ marginRight: "10px" }}
-                          variant="light"
-                          onClick={() => this.deleteItem(item.id)}>
-                          Delete
-                        </Button>
-                        <Button variant="light"
-                          onClick={() => this.editItem(index)}>
-                          Edit
-                        </Button>
-                      </span>
-                    </ListGroup.Item>
-                  </div>
-                );
-              })}
-            </ListGroup>
+          <Col md={{ span: 8, offset: 2 }}>
+            <Nav
+              variant="pills"
+              activeKey={filter}
+              onSelect={(k) => setFilter(k)}
+              className="justify-content-center mb-3"
+            >
+              <Nav.Item>
+                <Nav.Link eventKey="all">All</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="completed">Completed</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="pending">Pending</Nav.Link>
+              </Nav.Item>
+            </Nav>
+          </Col>
+        </Row>
+
+        {/* Todo List */}
+        <Row className="flex-grow-1">
+          <Col md={{ span: 8, offset: 2 }}>
+            <Card
+              className={`shadow-sm ${darkMode ? "bg-dark text-white" : ""}`}
+              style={{ maxHeight: "60vh", overflowY: "auto" }}
+            >
+              <ListGroup variant="flush">
+                {filteredList.length === 0 && (
+                  <ListGroup.Item className="text-center">
+                    🎉 Nothing here
+                  </ListGroup.Item>
+                )}
+                {filteredList.map((item, index) => (
+                  <ListGroup.Item
+                    key={item.id}
+                    className="d-flex justify-content-between align-items-center"
+                    style={{
+                      textDecoration: item.completed ? "line-through" : "none",
+                    }}
+                  >
+                    <div className="flex-grow-1 me-2">
+                      {editingIndex === index ? (
+                        <InputGroup>
+                          <FormControl
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                          />
+                          <Button
+                            variant="success"
+                            onClick={() => saveEdit(index)}
+                          >
+                            Save
+                          </Button>
+                          <Button variant="secondary" onClick={cancelEdit}>
+                            Cancel
+                          </Button>
+                        </InputGroup>
+                      ) : (
+                        item.value
+                      )}
+                    </div>
+                    <div>
+                      <Button
+                        variant="outline-success"
+                        className="me-2"
+                        onClick={() => toggleComplete(item.id)}
+                      >
+                        <CheckCircleFill />
+                      </Button>
+                      <Button
+                        variant="outline-warning"
+                        className="me-2"
+                        onClick={() => startEditing(index, item.value)}
+                      >
+                        <Pencil />
+                      </Button>
+                      <Button
+                        variant="outline-danger"
+                        onClick={() => deleteItem(item.id)}
+                      >
+                        <Trash />
+                      </Button>
+                    </div>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Clear Buttons */}
+        <Row className="mt-3">
+          <Col md={{ span: 8, offset: 2 }} className="d-flex justify-content-between">
+            <Button variant="danger" onClick={clearCompleted}>
+              Clear Completed
+            </Button>
+            <Button variant="outline-danger" onClick={clearAll}>
+              Clear All
+            </Button>
           </Col>
         </Row>
       </Container>
-    );
-  }
+    </div>
+  );
 }
 
 export default App;
