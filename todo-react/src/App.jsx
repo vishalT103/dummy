@@ -87,7 +87,7 @@ class App extends Component {
             fontWeight: "bolder",
           }}
         >
-          TODO LIST
+          TODO LIST error fixed by the project sub branch
         </Row>
 
         <hr />
