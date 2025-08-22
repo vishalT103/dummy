@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://dummy-ofo9.vercel.app/sitemap.xml
