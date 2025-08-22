@@ -87,7 +87,7 @@ class App extends Component {
             fontWeight: "bolder",
           }}
         >
-          TODO LIST updated by the project sub branch
+          TODO LIST
         </Row>
 
         <hr />
